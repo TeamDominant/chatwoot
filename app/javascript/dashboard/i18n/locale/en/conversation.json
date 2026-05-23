@@ -383,6 +383,7 @@
       "MACROS": "Macros",
       "LINEAR_ISSUES": "Linked Linear Issues",
       "SHOPIFY_ORDERS": "Shopify Orders",
+      "REMNAWAVE_USER": "Remnawave Subscription",
       "SHARED_FILES": "Attachments"
     },
     "SHARED_FILES": {
@@ -413,6 +414,23 @@
         "FULFILLED": "Fulfilled",
         "PARTIALLY_FULFILLED": "Partially Fulfilled",
         "UNFULFILLED": "Unfulfilled"
+      }
+    },
+    "REMNAWAVE": {
+      "NO_TELEGRAM_ID": "No Telegram ID linked to this contact",
+      "USER_NOT_FOUND": "User not found in Remnawave",
+      "FETCH_ERROR": "Error loading Remnawave user",
+      "ACTION_ERROR": "Action failed. Please try again.",
+      "TRAFFIC": "Traffic",
+      "EXPIRES": "Expires",
+      "RESET_TRAFFIC": "Reset Traffic",
+      "ENABLE": "Enable",
+      "DISABLE": "Disable",
+      "STATUS": {
+        "ACTIVE": "Active",
+        "DISABLED": "Disabled",
+        "LIMITED": "Limited",
+        "EXPIRED": "Expired"
       }
     }
   },

@@ -21,6 +21,7 @@ import SharedFiles from './SharedFiles.vue';
 import Draggable from 'vuedraggable';
 import MacrosList from './Macros/List.vue';
 import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
+import RemnaUserInfo from 'dashboard/components/widgets/conversation/RemnaUserInfo.vue';
 import SidebarActionsHeader from 'dashboard/components-next/SidebarActionsHeader.vue';
 import LinearIssuesList from 'dashboard/components/widgets/conversation/linear/IssuesList.vue';
 import LinearSetupCTA from 'dashboard/components/widgets/conversation/linear/LinearSetupCTA.vue';
@@ -54,6 +55,13 @@ const shopifyIntegration = useFunctionGetter(
 const isShopifyFeatureEnabled = computed(
   () => shopifyIntegration.value.enabled
 );
+
+const remnawaveIntegration = useFunctionGetter(
+  'integrations/getIntegration',
+  'remnawave'
+);
+
+const isRemnawaveEnabled = computed(() => remnawaveIntegration.value.enabled);
 
 const { isCloudFeatureEnabled } = useAccount();
 
@@ -128,6 +136,7 @@ onMounted(() => {
   store.dispatch('attributes/get', 0);
   // Load integrations to ensure linear integration state is available
   store.dispatch('integrations/get', 'linear');
+  store.dispatch('integrations/get', 'remnawave');
 });
 </script>
 
@@ -284,6 +293,22 @@ onMounted(() => {
               "
             >
               <ShopifyOrdersList :contact-id="contactId" />
+            </AccordionItem>
+          </div>
+          <div
+            v-else-if="
+              element.name === 'remnawave_user' && isRemnawaveEnabled
+            "
+          >
+            <AccordionItem
+              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.REMNAWAVE_USER')"
+              :is-open="isContactSidebarItemOpen('is_remnawave_user_open')"
+              compact
+              @toggle="
+                value => toggleSidebarUIState('is_remnawave_user_open', value)
+              "
+            >
+              <RemnaUserInfo :contact-id="contactId" />
             </AccordionItem>
           </div>
           <div v-else-if="element.name === 'contact_notes'">

@@ -362,6 +362,12 @@ Rails.application.routes.draw do
                 get :orders
               end
             end
+            resource :remnawave, controller: 'remnawave', only: [:destroy] do
+              collection do
+                get :user
+                post :user_action
+              end
+            end
             resource :linear, controller: 'linear', only: [] do
               collection do
                 delete :destroy

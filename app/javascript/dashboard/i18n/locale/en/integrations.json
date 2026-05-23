@@ -1,5 +1,8 @@
 {
   "INTEGRATION_SETTINGS": {
+    "REMNAWAVE": {
+      "HEADER": "Remnawave"
+    },
     "SHOPIFY": {
       "HEADER": "Shopify",
       "DELETE": {
