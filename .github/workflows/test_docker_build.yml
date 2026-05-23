@@ -1,10 +1,14 @@
 name: Test Docker Build
 
 on:
+  push:
+    branches:
+      - remnawave
   pull_request:
     branches:
       - develop
       - master
+      - remnawave
   workflow_dispatch:
 
 permissions:

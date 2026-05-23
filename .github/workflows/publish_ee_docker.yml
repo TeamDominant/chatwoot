@@ -1,9 +1,3 @@
-# #
-# # This action will publish Chatwoot EE docker image.
-# # This is set to run against merges to develop, master
-# # and when tags are created.
-# #
-
 name: Publish Chatwoot EE docker images
 
 on:
@@ -16,10 +10,12 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_REPO: chatwoot/chatwoot
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   build:
@@ -51,9 +47,9 @@ jobs:
         run: |
           SANITIZED_REF=$(echo "$GIT_REF" | sed 's/\//-/g')
           if [ "${{ github.ref_name }}" = "master" ]; then
-            echo "DOCKER_TAG=${DOCKER_REPO}:latest" >> $GITHUB_ENV
+            echo "DOCKER_TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_ENV
           else
-            echo "DOCKER_TAG=${DOCKER_REPO}:${SANITIZED_REF}" >> $GITHUB_ENV
+            echo "DOCKER_TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SANITIZED_REF}" >> $GITHUB_ENV
           fi
 
       - name: Set up QEMU
@@ -62,12 +58,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to DockerHub
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push by digest
         id: build
@@ -76,8 +72,8 @@ jobs:
           context: .
           file: docker/Dockerfile
           platforms: ${{ matrix.platform }}
-          push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-          outputs: type=image,name=${{ env.DOCKER_REPO }},push-by-digest=true,name-canonical=true,push=true
+          push: true
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
@@ -97,6 +93,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
+    env:
+      GIT_REF: ${{ github.head_ref || github.ref_name }}
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
@@ -105,39 +103,36 @@ jobs:
           pattern: digests-*
           merge-multiple: true
 
-      - name: Login to DockerHub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
-        env:
-          GIT_REF: ${{ github.head_ref || github.ref_name }}
         run: |
           SANITIZED_REF=$(echo "$GIT_REF" | sed 's/\//-/g')
           if [ "${{ github.ref_name }}" = "master" ]; then
-            TAG="${DOCKER_REPO}:latest"
+            TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           else
-            TAG="${DOCKER_REPO}:${SANITIZED_REF}"
+            TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SANITIZED_REF}"
           fi
-          
+
           docker buildx imagetools create -t $TAG \
-            $(printf '${{ env.DOCKER_REPO }}@sha256:%s ' *)
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
 
       - name: Inspect image
-        env:
-          GIT_REF: ${{ github.head_ref || github.ref_name }}
         run: |
           SANITIZED_REF=$(echo "$GIT_REF" | sed 's/\//-/g')
           if [ "${{ github.ref_name }}" = "master" ]; then
-            TAG="${DOCKER_REPO}:latest"
+            TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           else
-            TAG="${DOCKER_REPO}:${SANITIZED_REF}"
+            TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SANITIZED_REF}"
           fi
-          
+
           docker buildx imagetools inspect $TAG
